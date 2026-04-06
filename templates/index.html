@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voice Chatbot 💖</title>
+    <style>
+        body {
+            background-color: pink;
+            font-family: Arial;
+        }
+
+        .chat-box {
+            width: 400px;
+            margin: 50px auto;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        #messages {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        input {
+            width: 60%;
+            padding: 10px;
+        }
+
+        button {
+            padding: 10px;
+            background: hotpink;
+            color: white;
+            border: none;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="chat-box">
+    <h2>💖 Voice Chatbot</h2>
+
+    <div id="messages"></div>
+
+    <input type="text" id="msg" placeholder="Type message...">
+    <button onclick="send()">Send</button>
+    <button onclick="startVoice()">🎤</button>
+</div>
+
+<script>
+// 📩 Send message
+function send() {
+    let msg = document.getElementById("msg").value;
+
+    if (msg.trim() === "") return;
+
+    let messages = document.getElementById("messages");
+
+    messages.innerHTML += "<p><b>You:</b> " + msg + "</p>";
+
+    fetch("/chat", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({message: msg})
+    })
+    .then(res => res.json())
+    .then(data => {
+        let reply = data.reply;
+
+        messages.innerHTML += "<p><b>Bot:</b> " + reply + "</p>";
+
+        // 🔊 Speak reply
+        let speech = new SpeechSynthesisUtterance(reply);
+        speech.lang = "en-US";
+        window.speechSynthesis.speak(speech);
+
+        messages.scrollTop = messages.scrollHeight;
+    });
+
+    document.getElementById("msg").value = "";
+}
+
+// 🎤 Voice input
+function startVoice() {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+    recognition.lang = "en-US";
+
+    recognition.onresult = function(event) {
+        const text = event.results[0][0].transcript;
+        document.getElementById("msg").value = text;
+        send();  // auto send
+    };
+
+    recognition.start();
+}
+</script>
+
+</body>
+</html>
